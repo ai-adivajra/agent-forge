@@ -1,0 +1,30 @@
+id: "unit/004"
+title: "OpenClaw error correction loop"
+description: >
+  Validates RECOGNITION of the correction loop behaviour.
+  The fixture describes one concept (shell error → write → retry) in 2 turns.
+  Primary behaviour tested: concept recognition.
+
+feature: "prompt/implementation-oriented-rule"
+sprint: 2
+added: "2026-06-28"
+
+primary_behaviour: recognition
+
+expected_category: "Workflow"
+confidence_min: 75
+confidence_max: 100
+
+expected_terms:
+  - "shell"
+  - "write"
+  - "error"
+  - "loop"
+
+expected_commands: []
+max_candidates: 1
+
+notes: >
+  Deliberately excludes the standard sequence and step-skipping.
+  Tests only the error correction behaviour.
+  One concept, one expected item, one behaviour.

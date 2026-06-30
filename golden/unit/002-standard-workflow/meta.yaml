@@ -1,0 +1,36 @@
+id: "unit/002"
+title: "Standard OpenClaw agentic workflow"
+description: >
+  Validates RECOGNITION of the standard tool sequence.
+  The fixture describes one concept (the 4-step workflow) in 2 turns.
+  Primary behaviour tested: concept recognition.
+
+feature: "prompt/implementation-oriented-rule"
+sprint: 2
+added: "2026-06-28"
+
+primary_behaviour: recognition
+
+expected_category: "Workflow"
+confidence_min: 75
+confidence_max: 100
+
+expected_terms:
+  - "web_search"
+  - "read"
+  - "write"
+  - "shell"
+
+expected_tool_calls:
+  - "web_search"
+  - "read"
+  - "write"
+  - "shell"
+
+expected_commands: []
+max_candidates: 1
+
+notes: >
+  Deliberately excludes step-skipping and correction loop —
+  those are tested separately in 003 and 004.
+  One concept, one expected item, one behaviour.

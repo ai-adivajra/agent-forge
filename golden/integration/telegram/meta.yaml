@@ -1,0 +1,38 @@
+id: "integration/telegram"
+title: "Telegram plugin setup and channel configuration"
+description: >
+  A real OpenClaw session (~90 turns) covering Telegram bot integration:
+  plugin activation, botToken configuration, channel setup, and message routing.
+  Tests that the system extracts the configuration procedure from a session
+  that mixes setup steps with user questions and clarifications.
+
+feature: "integration/noise-robustness"
+sprint: 3
+added: "~"
+
+# ── Files to add ──────────────────────────────────────────────────────────
+# session.jsonl   copy from ~/.openclaw/agents/main/sessions/<telegram-session>
+#                 anonymise: replace botToken values with <YOUR_BOT_TOKEN>
+# expected.md     write after manually reviewing what capture.py extracts
+
+expected_category: "Integration"
+confidence_min: 55
+confidence_max: 100
+
+expected_terms:
+  - "telegram"
+  - "botToken"
+  - "channels"
+
+expected_commands: []
+
+max_candidates: null
+
+stability_note: >
+  Replace any actual botToken values with <YOUR_BOT_TOKEN> before committing.
+  Configuration key names (channels.telegram.botToken) are stable — use those.
+  Do not reference plugin version numbers.
+
+notes: >
+  Add session.jsonl and expected.md before running validate.py on this case.
+  Until then, validate.py will skip this case with a "pending" status.

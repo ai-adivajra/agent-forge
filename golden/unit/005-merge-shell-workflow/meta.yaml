@@ -1,0 +1,43 @@
+id: "unit/005"
+title: "Adding a new storage disk on Fedora"
+description: >
+  Validates COMPOSITION — specifically the merge behaviour.
+  The fixture has 4 turns, each describing one shell command in sequence.
+  The model must merge all four into one workflow note.
+  If it produces 4 separate items (one per command), the merge rule has failed.
+  Primary behaviour tested: composition / merge.
+
+feature: "prompt/mandatory-merge-rule"
+sprint: 2
+added: "2026-06-28"
+
+primary_behaviour: composition
+
+expected_category: "Workflow"
+confidence_min: 70
+confidence_max: 100
+
+expected_terms:
+  - "lsblk"
+  - "mount"
+  - "fstab"
+  - "df"
+
+expected_commands:
+  - "lsblk"
+  - "mount /dev/sdX /mnt/data"
+  - "df -h"
+
+expected_files:
+  - "/etc/fstab"
+
+max_candidates: 1
+
+notes: >
+  This is the canonical merge test. Four turns, four commands, one workflow.
+  A FAIL here means the mandatory merge rule has regressed.
+  All other checks (terms, commands, files) are secondary —
+  max_candidates: 1 is the critical assertion.
+
+  The Fedora disk example was chosen because it is version-independent,
+  OS-stable, and uses only standard Linux commands.

@@ -1,0 +1,4 @@
+{"type":"message","message":{"role":"user","content":"What tools does OpenClaw use during a typical research session?"}}
+{"type":"message","message":{"role":"assistant","content":[{"type":"text","text":"A typical OpenClaw research session uses four tools in sequence. First, web_search gathers external information on the topic. Then read inspects any relevant local files. After analysis, write produces the output — a report, a note, or a code file. Finally, shell verifies the result, runs tests, or confirms the file was created correctly."}]}}
+{"type":"message","message":{"role":"user","content":"Is that always the same order?"}}
+{"type":"message","message":{"role":"assistant","content":[{"type":"text","text":"The direction is consistent: gather, analyse, produce, verify. The core sequence is web_search → read → write → shell."}]}}

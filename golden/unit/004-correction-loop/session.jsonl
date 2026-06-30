@@ -1,0 +1,4 @@
+{"type":"message","message":{"role":"user","content":"What happens when shell returns an error in an OpenClaw session?"}}
+{"type":"message","message":{"role":"assistant","content":[{"type":"text","text":"When shell returns an error, OpenClaw does not stop. It loops back to write to correct the file that caused the problem, then calls shell again to verify the fix. This correction loop repeats until shell returns a clean result or the user explicitly confirms that the output is acceptable."}]}}
+{"type":"message","message":{"role":"user","content":"Can the loop repeat more than once?"}}
+{"type":"message","message":{"role":"assistant","content":[{"type":"text","text":"Yes. If the second shell call also returns an error, OpenClaw will loop back to write again. There is no fixed limit on the number of iterations. The session ends when shell succeeds or the user intervenes."}]}}

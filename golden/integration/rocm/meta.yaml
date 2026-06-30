@@ -1,0 +1,41 @@
+id: "integration/rocm"
+title: "ROCm GPU setup and troubleshooting"
+description: >
+  A real OpenClaw session (~150 turns) covering ROCm driver installation,
+  PyTorch GPU detection, and troubleshooting HSA runtime errors on AMD hardware.
+  Tests that the system extracts the key troubleshooting steps and commands
+  from a long, noisy conversation with multiple failed attempts.
+
+feature: "integration/noise-robustness"
+sprint: 3
+added: "~"
+
+# ── Files to add ──────────────────────────────────────────────────────────
+# session.jsonl   copy from ~/.openclaw/agents/main/sessions/<rocm-session>
+#                 anonymise: replace personal paths with ~/project, remove names
+# expected.md     write after manually reviewing what capture.py extracts
+
+expected_category: "Troubleshooting"
+confidence_min: 55
+confidence_max: 100
+
+expected_terms:
+  - "ROCm"
+  - "HSA"
+  - "amdgpu"
+
+expected_commands: []
+
+max_candidates: null
+
+stability_note: >
+  Avoid referencing specific ROCm version numbers in expected_terms.
+  Use structural terms (ROCm, HSA, amdgpu) that remain stable across versions.
+
+notes: >
+  Wide confidence range (55–100) is intentional for integration cases.
+  Real sessions have noise that reduces model confidence.
+  A unit test for the same topic would use 70–100.
+
+  Add session.jsonl and expected.md before running validate.py on this case.
+  Until then, validate.py will skip this case with a "pending" status.

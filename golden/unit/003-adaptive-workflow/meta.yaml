@@ -1,0 +1,29 @@
+id: "unit/003"
+title: "OpenClaw workflow adapts to task type"
+description: >
+  Validates RECOGNITION of the conditional step-skipping behaviour.
+  The fixture describes one concept (steps are optional) in 2 turns.
+  Primary behaviour tested: concept recognition.
+
+feature: "prompt/implementation-oriented-rule"
+sprint: 2
+added: "2026-06-28"
+
+primary_behaviour: recognition
+
+expected_category: "Workflow"
+confidence_min: 70
+confidence_max: 100
+
+expected_terms:
+  - "web_search"
+  - "shell"
+  - "skip"
+
+expected_commands: []
+max_candidates: 1
+
+notes: >
+  Deliberately excludes the standard sequence and correction loop.
+  Tests only the adaptive / conditional behaviour.
+  One concept, one expected item, one behaviour.

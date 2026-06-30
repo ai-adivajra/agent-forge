@@ -1,0 +1,8 @@
+{"type":"message","message":{"role":"user","content":"How do I add a new disk on Fedora?"}}
+{"type":"message","message":{"role":"assistant","content":[{"type":"text","text":"First, run lsblk to list all block devices and identify the new disk."}]}}
+{"type":"message","message":{"role":"user","content":"Ok I can see it. What next?"}}
+{"type":"message","message":{"role":"assistant","content":[{"type":"text","text":"Mount it with: mount /dev/sdX /mnt/data — replace sdX with your actual device name."}]}}
+{"type":"message","message":{"role":"user","content":"Done. How do I make it permanent?"}}
+{"type":"message","message":{"role":"assistant","content":[{"type":"text","text":"Add an entry to /etc/fstab. The format is: /dev/sdX  /mnt/data  ext4  defaults  0  2"}]}}
+{"type":"message","message":{"role":"user","content":"How do I verify everything is working?"}}
+{"type":"message","message":{"role":"assistant","content":[{"type":"text","text":"Run df -h to confirm the disk is mounted and the space is visible. If the entry is in /etc/fstab, it will survive a reboot."}]}}

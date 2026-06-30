@@ -1,0 +1,34 @@
+id: "unit/001"
+title: "OpenClaw configuration structure and model keys"
+description: >
+  Validates that a conversation explaining openclaw.json structure
+  produces a Configuration note with the correct structural keys and file path.
+
+feature: "prompt/implementation-oriented-rule"
+sprint: 2
+added: "2026-06-28"
+
+expected_category: "Configuration"
+confidence_min: 70
+confidence_max: 100
+
+expected_terms:
+  - "openclaw.json"
+  - "agents.defaults.model.primary"
+  - "agents.defaults.memorySearch.model"
+  - "workspace"
+
+expected_files:
+  - "~/.openclaw/openclaw.json"
+
+expected_commands: []
+
+stability_note: >
+  Uses structural config keys only (agents.defaults.*).
+  No version numbers, no release dates, no temporary paths.
+  Safe to keep long-term.
+
+notes: >
+  This case validates the implementation-oriented rule introduced in Sprint 2.
+  A note saying only "OpenClaw stores configuration in a JSON file" would FAIL:
+  it must describe which keys to set and in which file.

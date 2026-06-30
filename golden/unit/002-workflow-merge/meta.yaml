@@ -1,0 +1,43 @@
+id: "unit/002"
+title: "Standard OpenClaw agentic workflow"
+description: >
+  Validates that a conversation describing the OpenClaw agentic workflow
+  produces at most 2 knowledge items: the standard tool sequence and the
+  correction loop. These are two distinct concepts that appear in separate
+  turns and may legitimately be separated by the model.
+  The merge rule is validated by the max_candidates: 2 constraint —
+  4 fragmented tool items would still FAIL this case.
+
+feature: "prompt/quality-over-quantity-rule"
+sprint: 2
+added: "2026-06-28"
+
+expected_category: "Workflow"
+confidence_min: 70
+confidence_max: 100
+
+expected_terms:
+  - "web_search"
+  - "read"
+  - "write"
+  - "shell"
+
+expected_tool_calls:
+  - "web_search"
+  - "read"
+  - "write"
+  - "shell"
+
+expected_commands: []
+
+max_candidates: 2
+
+stability_note: >
+  Tool names (web_search, read, write, shell) are structural and stable.
+  No version numbers. No temporary outputs. Safe long-term.
+
+notes: >
+  The critical assertion for this case is max_candidates: 2.
+  The model must produce exactly ONE knowledge item covering all four tools.
+  If it returns four separate items (one per tool), the merge rule has failed
+  even if all individual items are correct.

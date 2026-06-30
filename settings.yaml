@@ -1,0 +1,39 @@
+openclaw:
+  # Path to openclaw.json — the main OpenClaw config file
+  config: ~/.openclaw/openclaw.json
+
+ollama:
+  host: http://127.0.0.1:11434
+  timeout: 600          # seconds; large models can be slow
+  chat_model: qwen3:14b
+  embedding_model: nomic-embed-text
+  # Maximum characters sent to the chat model per extraction request.
+  # This is a model-dependent limit, not a project limit.
+  # qwen3:14b effective context ≈ 32k tokens; 60k chars ≈ 15k tokens,
+  # leaving room for the system prompt and JSON response.
+  # Increase for models with larger context windows (e.g. 200k for claude-3.5).
+  max_payload_chars: 60000
+
+obsidian:
+  vault: ~/Obsidian/AI/OpenClaw
+  queue: Queue
+  knowledge: KnowledgeBase
+
+knowledge:
+  confidence: 0.75      # minimum confidence score to save a candidate (0.0 – 1.0)
+  max_candidates: 10    # cap on how many items to save per session run
+
+index:
+  db: ~/.openclaw/embeddings.sqlite   # path to the SQLite index
+  embed_fields:                       # fields concatenated before embedding
+    - title
+    - category
+    - domain
+    - type
+    - summary
+    - tags
+
+inject:
+  context_dir: ~/.openclaw/workspace/context   # where inject.py writes its output
+  knowledge_file: knowledge.md                 # injected Markdown context
+  retrieval_file: retrieval.json               # retrieval metadata for debugging

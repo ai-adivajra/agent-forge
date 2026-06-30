@@ -1,0 +1,30 @@
+id: "001"
+title: "OpenClaw configuration structure and model keys"
+description: >
+  Validates that a conversation explaining openclaw.json structure
+  produces a Configuration note with the correct config keys and file path.
+
+feature: "prompt/implementation-oriented-rule"
+sprint: 2
+added: "2026-06-28"
+
+expected_category: "Configuration"
+confidence_min: 70
+confidence_max: 100
+
+expected_terms:
+  - "openclaw.json"
+  - "agents.defaults.model.primary"
+  - "agents.defaults.memorySearch.model"
+  - "workspace"
+
+expected_files:
+  - "~/.openclaw/openclaw.json"
+
+expected_commands: []
+
+notes: >
+  This case validates the implementation-oriented rule introduced in Sprint 2:
+  the extraction must describe HOW to configure the model (which key, which file)
+  not just THAT configuration exists.
+  A note saying only "OpenClaw stores configuration in a JSON file" would FAIL this case.

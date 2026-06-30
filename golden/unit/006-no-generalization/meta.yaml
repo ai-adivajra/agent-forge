@@ -1,0 +1,53 @@
+id: "unit/006"
+title: "Identifying the installed GPU on Linux using lspci"
+description: >
+  Validates two behaviours simultaneously:
+  1. RECOGNITION: the model extracts a reusable command (lspci) correctly.
+  2. FILTERING/FAITHFULNESS: the model does not add packages or configuration
+     steps (Vulkan, Mesa, akmod-amdgpu) that were never mentioned in the session.
+
+  The fixture deliberately describes a general technique (how to identify a GPU)
+  rather than a transient observation (my GPU is X). This makes the knowledge
+  clearly reusable and eliminates ambiguity about whether extraction is warranted.
+
+feature: "prompt/faithfulness-rule"
+sprint: 3
+added: "2026-06-29"
+
+primary_behaviour: filtering
+
+expected_category: "Command"
+confidence_min: 70
+confidence_max: 100
+
+expected_terms:
+  - "lspci"
+  - "amdgpu"
+
+forbidden_terms:
+  - "vulkan"
+  - "mesa"
+  - "akmod"
+  - "mesa-vulkan-drivers"
+  - "dnf install"
+
+expected_commands:
+  - "lspci | grep -i vga"
+
+max_candidates: 1
+
+stability_note: >
+  Uses only stable Linux commands (lspci, grep) and the driver name (amdgpu).
+  No version numbers. No GPU model name. Stable long-term.
+
+notes: >
+  Fixture rewritten 2026-06-29 after discovering the original version tested
+  a transient observation ("my GPU is X") rather than reusable knowledge
+  ("how to identify a GPU"). The model correctly returned {"knowledge": []}
+  on the original fixture — not a model failure, but a fixture design flaw.
+
+  Rule learned and added to golden/README.md:
+  "A fixture must test a reusable knowledge item, not a transient observation."
+
+  The forbidden_terms check validates faithfulness: the model must not add
+  Vulkan/Mesa/akmod recommendations that were not present in the session.
