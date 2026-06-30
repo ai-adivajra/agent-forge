@@ -1,0 +1,40 @@
+case_id: retrieval/002-vague-conceptual-query
+type: retrieval
+purpose: >
+  Verify retrieval quality on a query with no unique identifiers — pure
+  conceptual/semantic matching. Also serves as a regression case for
+  a confirmed weakness: generic high-frequency words ("agent", "not")
+  produce an artificially inflated lexical score that crowds out a
+  genuinely relevant note from the top-3.
+
+query: "why is my agent not responding to requests"
+
+expected_top_3_contains:
+  - "thinking-only"           # the qwen3 empty-content incident — CONFIRMED in top-3
+
+known_failure:
+  description: >
+    "skill_workshop apply fails despite healthy gateway" is the single
+    most relevant note for this query (it IS the agent-not-responding
+    incident) but ranks 4th, just outside top-3, at rerank
+    embedding=0.80/lexical=0.20. Three less-relevant notes
+    (AGENTS.md checklist, gemma3:12b rejects, qwen3 thinking-only) all
+    share an inflated lexical score of 0.50 purely because they contain
+    the generic words "agent" and "not" — words common enough across
+    the knowledge base to carry no real discriminating signal.
+  measured_at: "2026-06-30, lexical_weight=0.2, 12-note index"
+  root_cause: >
+    Current lexical scoring is matched_terms / query_terms — a flat
+    count with no term-frequency weighting. High-frequency words like
+    "agent" and "not" should contribute less to the lexical score than
+    rare, discriminating words. This is the same issue the IDF
+    suggestion was meant to address.
+  fix_status: not yet implemented
+
+notes: >
+  Do not "fix" this case by changing the expectation to match current
+  output. The expectation reflects the genuinely correct answer
+  (skill_workshop SHOULD be top-3 for this query). This case stays RED
+  until an IDF-weighted (or otherwise frequency-aware) lexical scoring
+  replaces the current flat matched/total fraction — at which point this
+  becomes the regression test proving that fix actually works.

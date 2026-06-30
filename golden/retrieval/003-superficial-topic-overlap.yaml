@@ -1,0 +1,24 @@
+case_id: retrieval/003-superficial-topic-overlap
+type: retrieval
+purpose: >
+  Verify that a note sharing only a superficial domain/topic with the
+  query, but with no real relevance to the specific question asked,
+  does not rank above genuinely relevant notes.
+
+query: "how do I check disk space on this machine"
+
+expected_rank_1_contains: "disk space"
+
+never_top_3:
+  - "skill_workshop"            # OpenClaw-specific incident, wrong topic entirely
+  - "gemma3:12b rejects"        # same domain (openclaw) but unrelated subject
+
+notes: >
+  This is the inverse of case 002 — here the query DOES have strong
+  lexical signal ("disk", "space") that should dominate, and several
+  same-domain (openclaw) notes about unrelated incidents should NOT
+  outrank the actually relevant disk-space note just because they share
+  a domain tag. Useful for catching domain-routing bugs where the
+  RetrievalPolicy hybrid mode pulls in irrelevant same-domain noise
+  (the cross-domain leakage pattern first observed during the earlier
+  domain-routing investigation).

@@ -1,0 +1,27 @@
+case_id: retrieval/001-specific-identifier
+type: retrieval
+purpose: >
+  Verify that a query containing a unique technical identifier retrieves
+  the matching note at rank 1, with a clear score margin over unrelated
+  same-domain notes.
+
+query: "skill_workshop apply fails"
+
+expected_rank_1_contains: "skill_workshop"
+
+expected_top_3_contains:
+  - "skill_workshop"
+
+never_rank_1:
+  - "AGENTS.md investigation checklist"
+  - "Disk space verification workflow"
+
+notes: >
+  This is the easiest case in the retrieval suite — a unique identifier
+  with no ambiguity. Baseline measurement: at lexical_weight=0.0 (no
+  rerank), embedding score alone correctly ranks this note 1st but with
+  only a 0.17 margin over the 2nd result, despite the 2nd result sharing
+  zero lexical overlap with the query. This case exists to catch a
+  regression where embedding-only ranking stops finding this note at
+  rank 1, and to measure how much rerank weight is needed to create a
+  safe margin.
