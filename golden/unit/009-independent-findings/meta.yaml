@@ -1,0 +1,60 @@
+case_id: unit/009-independent-findings
+type: unit
+purpose: >
+  Verify that independent findings discovered in the same investigation
+  are preserved as separate, distinguishable knowledge rather than
+  merged into a single narrative that loses distinct failure modes.
+
+description: >
+  Catches over-compression: merging genuinely independent findings into
+  a single narrative when they should remain separate, reusable
+  knowledge candidates. Discovered when capture.py reduced four distinct
+  model failure modes (checklist paralysis, schema rejection, tool-call
+  hallucination, intermittent success) into two candidates, losing three
+  of the four findings entirely.
+
+expected_category: Troubleshooting
+confidence_min: 70
+confidence_max: 100
+
+expected_entities:
+  models:
+    - "qwen3:14b"
+    - "gemma3:12b"
+    - "qwen2.5-coder:14b"
+
+forbidden_entities:
+  models:
+    - "llama3-8b"
+    - "llama3-70b"
+
+checks:
+  expected_entities:
+    severity: required
+  forbidden_entities:
+    severity: required
+  category:
+    severity: advisory
+  confidence:
+    severity: advisory
+
+rule: >
+  Preserve independent findings even if they belong to the same
+  investigation. Two observations are independent if they describe
+  different root causes, affect different models/components, or would
+  remain true even if the other observation were false. Do not merge
+  independent findings into one candidate just because they were
+  discovered in the same session.
+
+notes: >
+  v1 of this case incorrectly required category=Troubleshooting as a
+  hard pass/fail criterion, causing every run to FAIL even when the
+  actual property under test (model coverage across findings) passed.
+  v2 marks category and confidence as advisory, mirroring the same
+  correction already applied to cases 012 and 013.
+
+  expected_entities.models checks coverage (all three models appear
+  SOMEWHERE in the output) but does not by itself prove they are in
+  SEPARATE candidates rather than one merged one — combine with manual
+  review of candidate count until validate.py gains a per-candidate
+  entity-grouping check, if ever needed.

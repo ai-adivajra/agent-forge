@@ -1,0 +1,38 @@
+case_id: unit/011c-no-file-invention
+type: unit
+purpose: >
+  Verify file-path faithfulness in isolation from other entity types.
+
+description: >
+  Catches file-path fabrication: inventing a file path that never appears
+  in the session, including plausible-looking paths constructed from real
+  fragments. Confirmed regression — capture.py has independently produced
+  "/path/to/AGENTS.md" (a fabricated generic path) and
+  "~/.ollama/models/llama3.2/manifest.json" (a fully invented file tied
+  to an already-invented model name).
+
+expected_category: Troubleshooting
+confidence_min: 60
+confidence_max: 100
+
+forbidden_entities:
+  files:
+    - "/path/to/AGENTS.md"
+    - "/path/to/patch.diff"
+    - "manifest.json"
+    - "~/.ollama/models/llama3.2/manifest.json"
+
+checks:
+  forbidden_entities:
+    severity: required
+  category:
+    severity: advisory
+  confidence:
+    severity: advisory
+
+rule: >
+  File paths must be copied verbatim from the session. Never prepend a
+  generic prefix (e.g. "/path/to/"), never construct a plausible-looking
+  path for a file that was never mentioned, and never invent a file path
+  that depends on an already-fabricated entity (e.g. a manifest file for
+  an invented model).

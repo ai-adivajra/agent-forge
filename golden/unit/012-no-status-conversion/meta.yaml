@@ -1,0 +1,54 @@
+case_id: unit/012-no-status-conversion
+type: unit
+purpose: >
+  Verify that an explicitly proposed-but-unverified action is not
+  rewritten as a confirmed, completed fact.
+
+description: >
+  This session deliberately ends with the agent stating it has NOT
+  applied the fix and has only MODERATE confidence in the diagnosis.
+  v1 of this case used a single forbidden keyword ("proposed") which
+  produced a false positive: the real capture.py output was faithful
+  (described the mechanism without claiming the fix was applied) but
+  failed because it used different correct wording. v2 checks the
+  actual property of interest — completed-action language — rather
+  than requiring one specific synonym.
+
+expected_category: Troubleshooting
+confidence_min: 40
+confidence_max: 75
+
+forbidden_terms:
+  - "resolved the issue"
+  - "fixed the issue"
+  - "was applied"
+  - "has been applied"
+  - "confirmed to resolve"
+  - "confirmed to fix"
+  - "successfully fixed"
+
+checks:
+  forbidden_terms:
+    severity: required
+  expected_terms:
+    severity: advisory
+  category:
+    severity: advisory
+  confidence:
+    severity: required   # the session explicitly states moderate confidence;
+                          # high confidence here would itself misrepresent the source
+
+rule: >
+  If the session describes something as proposed, suggested, planned, or
+  explicitly not-yet-verified, the summary must preserve that status. Do
+  not describe an unconfirmed action as something that happened, was
+  applied, or was verified to work — but do not require a single specific
+  word to express that; any faithful phrasing should pass.
+
+notes: >
+  v1 of this case incorrectly treated absence of the word "proposed" as a
+  failure. The real model output said "this rule causes..." (correctly
+  describing the mechanism without claiming the fix was applied) and
+  should have passed. confidence is now a required check, since matching
+  the session's stated moderate confidence is the clearest objective
+  signal that the status was preserved faithfully.

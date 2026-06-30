@@ -1,0 +1,42 @@
+case_id: unit/011a-no-model-invention
+type: unit
+purpose: >
+  Verify model-name faithfulness in isolation from other entity types.
+
+description: >
+  Catches model-name fabrication: inventing a model that never appears in
+  the session. Confirmed regression — capture.py has independently
+  invented "Llama3-8B" / "Llama3-70B" in one run and "llama3.2" /
+  "mistral-7b" in another, despite the session only ever mentioning
+  qwen3, gemma3, and qwen2.5-coder variants.
+
+expected_category: Troubleshooting
+confidence_min: 60
+confidence_max: 100
+
+forbidden_entities:
+  models:
+    - "llama3.2"
+    - "llama3-8b"
+    - "llama3-70b"
+    - "llama3"
+    - "llama2"
+    - "mistral"
+    - "mistral-7b"
+    - "phi3"
+    - "gemini"
+    - "gpt-4"
+    - "gpt-3"
+    - "claude-3"
+
+checks:
+  forbidden_entities:
+    severity: required
+  category:
+    severity: advisory
+  confidence:
+    severity: advisory
+
+rule: >
+  Model names must be copied verbatim from the session. Never invent a
+  plausible-sounding model that does not appear anywhere in the source.

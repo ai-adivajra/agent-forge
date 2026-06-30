@@ -27,7 +27,7 @@ from typing import Any
 import yaml
 
 from config    import ROOT, SETTINGS
-from extractor import Extractor
+from extractor import Extractor, extract_structured_facts
 from knowledge import KnowledgeCandidate, ALLOWED_CATEGORIES, normalise_category
 from ollama    import Ollama, OllamaError
 from parser    import SessionParser
@@ -67,9 +67,10 @@ class Status(str, Enum):
 
 @dataclass
 class CheckResult:
-    name:    str
-    status:  Status
-    detail:  str = ""
+    name:     str
+    status:   Status
+    detail:   str  = ""
+    advisory: bool = False
 
 
 @dataclass
@@ -111,19 +112,30 @@ def _load_meta(case_dir: Path) -> dict | None:
 
 def _score_checks(checks: list[CheckResult]) -> float:
     """
-    Category is blocking (0.0 if failed).
-    Remaining checks contribute equally to the remaining 100%.
+    Score is based on required checks only; advisory failures are excluded.
+    Category is blocking (0.0 if a required category check failed).
+    Remaining required checks contribute equally to the remaining 100%.
     """
-    cat_check = next((c for c in checks if c.name == "category"), None)
+    required = [c for c in checks if not c.advisory]
+
+    cat_check = next((c for c in required if c.name == "category"), None)
     if cat_check and cat_check.status == Status.FAIL:
         return 0.0
 
-    scorable = [c for c in checks if c.name != "category"]
+    scorable = [c for c in required if c.name != "category"]
     if not scorable:
         return 1.0
 
     passed = sum(1 for c in scorable if c.status == Status.PASS)
     return passed / len(scorable)
+
+
+def _get_check_severity(meta: dict, check_name: str) -> str:
+    """Return 'required' or 'advisory' for a check name. Default: 'required'."""
+    checks_cfg = meta.get("checks") or {}
+    entry = checks_cfg.get(check_name) or {}
+    severity = entry.get("severity", "required")
+    return severity if severity in ("required", "advisory") else "required"
 
 
 # ---------------------------------------------------------------------------
@@ -213,6 +225,79 @@ def _check_forbidden_terms(
             f"hallucinated terms found: {', '.join(found)}"
         )
     return CheckResult("forbidden_terms", Status.PASS, "none found")
+
+
+_ENTITY_FIELD_MAP = {
+    "models":  lambda c: c.models,
+    "files":   lambda c: c.files,
+    "tools":   lambda c: c.tool_calls,
+    "plugins": lambda c: c.plugins,
+}
+
+
+def _check_entities(
+    candidates: list[KnowledgeCandidate],
+    expected_entities: dict,
+) -> CheckResult:
+    if not expected_entities:
+        return CheckResult("expected_entities", Status.PASS, "N/A")
+
+    all_missing: list[str] = []
+    total = 0
+
+    for sub_key, entities in expected_entities.items():
+        if not entities:
+            continue
+        getter = _ENTITY_FIELD_MAP.get(sub_key)
+        if getter is None:
+            continue
+        collected = {v.lower() for c in candidates for v in getter(c)}
+        for entity in entities:
+            total += 1
+            e = entity.lower()
+            # Accept exact match or suffix match so that "AGENTS.md" matches
+            # "~/.openclaw/workspace/AGENTS.md" (parser extracts full paths)
+            if not any(item == e or item.endswith("/" + e) for item in collected):
+                all_missing.append(f"{sub_key}:{entity}")
+
+    if total == 0:
+        return CheckResult("expected_entities", Status.PASS, "N/A")
+
+    found_count = total - len(all_missing)
+    status = Status.PASS if not all_missing else Status.FAIL
+    detail = f"{found_count} / {total}"
+    if all_missing:
+        detail += f"  missing: {', '.join(all_missing)}"
+
+    return CheckResult("expected_entities", status, detail)
+
+
+def _check_forbidden_entities(
+    candidates: list[KnowledgeCandidate],
+    forbidden_entities: dict,
+) -> CheckResult:
+    if not forbidden_entities:
+        return CheckResult("forbidden_entities", Status.PASS, "N/A")
+
+    found: list[str] = []
+
+    for sub_key, entities in forbidden_entities.items():
+        if not entities:
+            continue
+        getter = _ENTITY_FIELD_MAP.get(sub_key)
+        if getter is None:
+            continue
+        collected = {v.lower() for c in candidates for v in getter(c)}
+        for entity in entities:
+            if entity.lower() in collected:
+                found.append(f"{sub_key}:{entity}")
+
+    if found:
+        return CheckResult(
+            "forbidden_entities", Status.FAIL,
+            f"forbidden entities found: {', '.join(found)}"
+        )
+    return CheckResult("forbidden_entities", Status.PASS, "none found")
 
 
 def _check_commands(
@@ -354,6 +439,15 @@ def run_case(
             for d in raw.get("knowledge", [])
         ]
 
+        # Merge deterministically extracted facts (Deterministic First Principle)
+        facts = extract_structured_facts(conversation)
+        for candidate in candidates:
+            candidate.commands   = facts["commands"]
+            candidate.files      = facts["files"]
+            candidate.tool_calls = facts["tools"]
+            if not facts["ask_llm_for_models"]:
+                candidate.models = facts["models"]
+
     except OllamaError as e:
         return CaseResult(
             case_id = case_id,
@@ -394,14 +488,29 @@ def run_case(
         candidates,
         meta.get("expected_commands", []),
     ))
+    checks.append(_check_entities(
+        candidates,
+        meta.get("expected_entities", {}),
+    ))
+    checks.append(_check_forbidden_entities(
+        candidates,
+        meta.get("forbidden_entities", {}),
+    ))
     checks.append(_check_spurious_category(candidates))
     checks.append(_check_max_candidates(
         candidates,
         meta.get("max_candidates"),
     ))
 
-    score  = _score_checks(checks)
-    status = Status.PASS if all(c.status == Status.PASS for c in checks) else Status.FAIL
+    # Mark advisory failures; they are visible but do not cause overall FAIL
+    for check in checks:
+        if check.status == Status.FAIL:
+            if _get_check_severity(meta, check.name) == "advisory":
+                check.advisory = True
+
+    score = _score_checks(checks)
+    required_failed = any(c.status == Status.FAIL and not c.advisory for c in checks)
+    status = Status.FAIL if required_failed else Status.PASS
 
     # On FAIL: save debug artifacts automatically
     debug_dir: Path | None = None
@@ -475,6 +584,8 @@ def discover_cases(
 # ---------------------------------------------------------------------------
 
 def _render_check_line(check: CheckResult) -> str:
+    if check.advisory and check.status == Status.FAIL:
+        return f"  ⚠  {check.name:<20} (advisory)   {check.detail}"
     sym = check.status.symbol()
     return f"  {sym}  {check.name:<20} {check.status.value:<8} {check.detail}"
 
@@ -509,7 +620,12 @@ def _render_report(
         for r in family:
             sym = r.status.symbol()
             score_str = f"  {r.score:.0%}" if r.score is not None else ""
-            lines.append(f"  {sym}  {r.case_id:<40} {r.status.value}{score_str}")
+            advisory_count = sum(1 for c in r.checks if c.advisory and c.status == Status.FAIL)
+            advisory_str = (
+                f"  ({advisory_count} advisory {'note' if advisory_count == 1 else 'notes'})"
+                if advisory_count else ""
+            )
+            lines.append(f"  {sym}  {r.case_id:<40} {r.status.value}{score_str}{advisory_str}")
 
             if r.reason:
                 lines.append(f"       {r.reason}")
@@ -518,9 +634,12 @@ def _render_report(
             if r.debug_dir:
                 lines.append(f"       debug → {r.debug_dir}")
 
-            if r.checks and (verbose or r.status == Status.FAIL):
+            advisory_fails = [c for c in r.checks if c.advisory and c.status == Status.FAIL]
+            show_all = verbose or r.status == Status.FAIL
+            if r.checks and (show_all or advisory_fails):
                 for check in r.checks:
-                    lines.append(_render_check_line(check))
+                    if show_all or (check.advisory and check.status == Status.FAIL):
+                        lines.append(_render_check_line(check))
 
         lines.append("")
 
@@ -608,11 +727,20 @@ def main() -> None:
 
         sym = result.status.symbol()
         score_str = f"  {result.score:.0%}" if result.score is not None else ""
-        print(f"\r  {sym}  {case_id:<40} {result.status.value}{score_str}")
+        advisory_count = sum(1 for c in result.checks if c.advisory and c.status == Status.FAIL)
+        advisory_str = (
+            f"  ({advisory_count} advisory {'note' if advisory_count == 1 else 'notes'})"
+            if advisory_count else ""
+        )
+        print(f"\r  {sym}  {case_id:<40} {result.status.value}{score_str}{advisory_str}")
 
         if result.reason or result.error:
             msg = result.error if result.error else result.reason
             print(f"       {msg}")
+
+        for check in result.checks:
+            if check.advisory and check.status == Status.FAIL:
+                print(_render_check_line(check))
 
         if fail_fast and result.status == Status.FAIL:
             print("\n  [--fail-fast] stopping at first FAIL.")

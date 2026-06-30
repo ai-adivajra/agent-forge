@@ -1,0 +1,35 @@
+case_id: openclaw-investigation-checklist
+type: integration
+provenance: synthetic_reconstruction
+description: >
+  A real multi-step investigation (run in Claude Code, not OpenClaw itself)
+  that diagnosed an AGENTS.md checklist defect causing intermittent agent
+  silence on broad/vague prompts across multiple local models. Tests whether
+  capture.py can extract the same independent, well-separated knowledge
+  candidates that a human-guided extraction produced.
+
+  IMPORTANT: session.jsonl is a SYNTHETIC RECONSTRUCTION, not a captured
+  OpenClaw session. The original investigation happened in Claude Code,
+  which does not produce OpenClaw's .jsonl session format. This file was
+  manually rebuilt to represent what an equivalent OpenClaw session would
+  contain, preserving the actual sequence of hypotheses, tool calls, and
+  findings from the real investigation -- including the mid-investigation
+  contamination (patch applied between attempt 2 and 3) and its correction
+  (clean attempt 4). Tool outputs are paraphrased summaries of real results,
+  not literal captured output.
+
+expected_candidate_count: 4
+expected_categories:
+  - Troubleshooting
+  - Configuration
+expected_domains:
+  - openclaw
+notes: >
+  This case specifically tests:
+  - Splitting unrelated failure modes into separate candidates (4 distinct
+    models failed for 4 distinct reasons; a poor extractor would merge them)
+  - Preserving a probabilistic/nuanced finding rather than oversimplifying
+    ("larger models are not immune, only less susceptible")
+  - Filtering out transient/contaminated test data (an isolation test was
+    contaminated mid-run; the source material was corrected before this
+    case was built, so the session.jsonl reflects the corrected investigation)

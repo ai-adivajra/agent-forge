@@ -10,6 +10,72 @@ from parser import (
     ToolResult,
 )
 
+# ---------------------------------------------------------------------------
+# Deterministic structured-fact extraction (Deterministic First Principle)
+# ---------------------------------------------------------------------------
+
+_COMMAND_KEYS = frozenset({"command", "cmd", "shell", "bash", "script"})
+_FILE_KEYS    = frozenset({"path", "file", "filename", "filepath"})
+_MODEL_KEYS   = frozenset({"model", "model_id", "model_name"})
+
+
+def extract_structured_facts(conversation: list[Event]) -> dict:
+    """
+    Extract commands, files, tool names, and model names directly from
+    ToolCall events — no LLM involved, no hallucination possible.
+
+    Returns:
+        commands           — values of command-like arguments, deduplicated
+        files              — values of path-like arguments, deduplicated
+        tools              — tool names called, deduplicated
+        models             — values of model-like arguments, deduplicated
+        ask_llm_for_models — True iff no models were found structurally;
+                             the LLM may then attempt text extraction as fallback
+    """
+    commands: list[str] = []
+    files:    list[str] = []
+    tools:    list[str] = []
+    models:   list[str] = []
+
+    seen_commands: set[str] = set()
+    seen_files:    set[str] = set()
+    seen_tools:    set[str] = set()
+    seen_models:   set[str] = set()
+
+    for event in conversation:
+        if not isinstance(event, ToolCall):
+            continue
+
+        if event.name and event.name not in seen_tools:
+            tools.append(event.name)
+            seen_tools.add(event.name)
+
+        if not isinstance(event.arguments, dict):
+            continue
+
+        for key, value in event.arguments.items():
+            if not isinstance(value, str) or not value.strip():
+                continue
+            k = key.lower()
+
+            if k in _COMMAND_KEYS and value not in seen_commands:
+                commands.append(value)
+                seen_commands.add(value)
+            elif k in _FILE_KEYS and value not in seen_files:
+                files.append(value)
+                seen_files.add(value)
+            elif k in _MODEL_KEYS and value not in seen_models:
+                models.append(value)
+                seen_models.add(value)
+
+    return {
+        "commands":             commands,
+        "files":                files,
+        "tools":                tools,
+        "models":               models,
+        "ask_llm_for_models":   len(models) == 0,
+    }
+
 
 class Extractor:
     """

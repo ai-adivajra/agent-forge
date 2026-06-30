@@ -58,6 +58,72 @@ OpenClaw
 
 ---
 
+## Deterministic Extraction Principle
+
+Any field for which a deterministic source exists in the parsed session
+must be extracted outside the LLM. The LLM is reserved for semantic
+interpretation, synthesis, classification, and summarization — never
+for transcription of facts that already exist verbatim in the source.
+
+This is not an optimization. It is a foundational architecture
+principle, validated experimentally:
+
+| Field    | Deterministic source        | LLM-only accuracy | Parser accuracy |
+|----------|-----------------------------|-------------------|-----------------|
+| commands | ToolCall.arguments          | ~70-80%           | 100%            |
+| files    | ToolCall.arguments          | ~90-100%          | ~90-100%        |
+| models   | partial (mixed source)      | 0-50%             | unchanged       |
+
+The plateau on `models` after two rounds of prompt refinement (zero
+measurable gain) demonstrates that prompt engineering cannot compensate
+for the absence of a deterministic source. Conversely, `commands` moved
+from ~70-80% to 100% reliability the moment a deterministic source
+existed and was used.
+
+### Strict constraint on extractors
+
+A deterministic extractor must use only direct, literal matching:
+regular expressions, exact key lookups, or unambiguous structural
+parsing. It must never perform semantic inference, fuzzy matching, or
+any reasoning that could itself introduce error or hallucination.
+
+Acceptable:
+- Matching a known model-name pattern (`qwen3:14b`, `ollama/gemma3:12b`)
+  via regex against literal text
+- Reading a `model` key from a structured tool-call argument
+
+Not acceptable:
+- Inferring "the larger model" refers to a specific model name based
+  on context
+- Guessing a likely file path from a partial mention
+- Any step that requires understanding meaning rather than matching
+  literal patterns
+
+If a field cannot be extracted via direct matching with high confidence,
+it remains an LLM-generated field, governed by the citation/narrative
+rules already established (verbatim citation for extractive fields,
+faithful status preservation for narrative fields).
+
+### Extraction checklist
+
+Track field-by-field deterministic coverage here as it expands:
+
+| Field      | Deterministic source         | Status                                               |
+|------------|------------------------------|------------------------------------------------------|
+| commands   | ToolCall.arguments           | done                                                 |
+| files      | ToolCall.arguments           | done                                                 |
+| tools      | ToolCall.name                | done                                                 |
+| models     | ToolCall.arguments (partial) | partial — text-mention extraction not yet attempted  |
+| URLs       | —                            | not started                                          |
+| packages   | —                            | not started                                          |
+| services   | —                            | not started                                          |
+| git hashes | —                            | not started                                          |
+
+A field only moves to "done" when validated by a golden-case campaign
+showing measurable improvement, the same way `commands` was validated.
+
+---
+
 ## Components
 
 ### One responsibility per program

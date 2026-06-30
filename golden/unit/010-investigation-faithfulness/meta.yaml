@@ -1,0 +1,56 @@
+case_id: unit/010-investigation-faithfulness
+type: unit
+purpose: >
+  Verify that an investigation's actual hypothesis-test-revise structure
+  is not rewritten as a tidy "and then it was fixed" story.
+
+description: >
+  Catches narrative rewriting: converting an investigation's actual
+  hypothesis-test-revise structure into a tidy "and then it was fixed"
+  story, losing the methodology and the contingent/probabilistic nature
+  of the finding.
+
+expected_category: Troubleshooting
+confidence_min: 70
+confidence_max: 100
+
+expected_terms:
+  - "intermittent"
+
+forbidden_terms:
+  - "larger models are immune"
+  - "always succeed"
+
+checks:
+  expected_terms:
+    severity: required
+  forbidden_terms:
+    severity: required
+  expected_entities:
+    severity: required
+  forbidden_entities:
+    severity: required
+  category:
+    severity: advisory
+  confidence:
+    severity: advisory
+  spurious_category:
+    severity: advisory
+
+rule: >
+  Do not rewrite a hypothesis-test-revise investigation as a simple
+  problem-then-solution narrative. If a finding required multiple
+  attempts, contradicting evidence, or a corrected/discarded test, the
+  summary should reflect that the conclusion has appropriate uncertainty
+  or methodological grounding — not present it as a single clean
+  deduction.
+
+notes: >
+  v1 of this case incorrectly required category=Troubleshooting as a
+  hard pass/fail criterion. v2 marks category, confidence, and
+  spurious_category as advisory, mirroring the correction already
+  applied to cases 009, 012, and 013. spurious_category in particular
+  was observed failing due to the model confusing the `category` field
+  with the `type` field (returning "Unknown" / "Observation" — valid
+  `type` values, not valid `category` values) — a separate, real bug
+  worth tracking but not the property this case is designed to measure.

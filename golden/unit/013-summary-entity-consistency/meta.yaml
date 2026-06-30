@@ -1,0 +1,52 @@
+case_id: unit/013-summary-entity-consistency
+type: unit
+purpose: >
+  Verify that an entity mentioned in the free-text summary also appears,
+  using the exact same string, in its corresponding structured field.
+
+description: >
+  Catches summary/structured-field inconsistency: mentioning an entity
+  (file, model, tool) in free-text summary while the corresponding
+  structured field (files, models, tool_calls) omits it or contains a
+  different, normalized/altered version of the same string.
+
+expected_category: Troubleshooting
+confidence_min: 70
+confidence_max: 100
+
+expected_terms:
+  - "AGENTS.md"
+
+expected_entities:
+  files:
+    - "AGENTS.md"
+
+checks:
+  expected_terms:
+    severity: required
+  expected_entities:
+    severity: required
+  category:
+    severity: advisory
+  confidence:
+    severity: advisory
+
+rule: >
+  Every named entity mentioned in the summary text must also appear,
+  using the EXACT same string, in its corresponding structured field.
+  Do not mention an entity in the summary while omitting it, or a
+  normalized/altered version of it, from the structured fields.
+
+notes: >
+  v1 of this case incorrectly required category=Troubleshooting, which
+  caused every run to FAIL even when the actual property under test
+  (summary/field consistency for AGENTS.md) passed perfectly. v2 marks
+  category and confidence as advisory, since this case specifically
+  targets entity consistency, not classification accuracy. This mirrors
+  the same correction already applied to case 012.
+
+  This case overlaps deliberately with case 008 (entity substitution) --
+  both use "AGENTS.md" as the canary string -- but tests a different
+  failure mode: case 008 checks the structured field directly against a
+  forbidden/expected list; this case checks that the *summary* and the
+  *structured field* agree with each other.

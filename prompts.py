@@ -192,11 +192,8 @@ type        — the nature of this knowledge item (choose exactly one):
                 observation — a fact or finding from a session (how something behaves)
                 incident    — a problem encountered, whether resolved or not
 
-tool_calls  — OpenClaw / Claude Code tool names only
-              Examples: write, read, web_search, shell, computer, bash_tool
-
-commands    — terminal / shell commands only
-              Examples: python capture.py, ollama pull llama3.2, systemctl restart ollama
+models      — model names mentioned in the session, copied verbatim from the source text
+              Do not substitute, infer, or guess. Leave empty if no model is explicitly named.
 
 confidence  — integer 0–100 reflecting the strength of the evidence
               supporting the reason field, based strictly on what appears
@@ -228,6 +225,18 @@ reason      — one sentence explaining why this item was retained and what
               strength of evidence supports it; must be coherent with the
               confidence score
 
+NARRATIVE FIELDS
+
+summary, reason, and notes are GENERATIVE — you may summarize the
+session in your own words. However they must remain factually faithful:
+
+Never describe a proposed action as completed.
+Never describe a hypothesis as confirmed.
+Never describe an unverified fix as applied.
+Preserve the status of events exactly as observed in the session —
+if something was suggested but not yet done, say so; if something
+was tested but not yet confirmed, say so.
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 OUTPUT FORMAT
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -243,10 +252,7 @@ Return ONLY valid JSON. No preamble. No markdown fences.
       "platform":   "<OS or runtime, e.g. Linux, Docker — omit if not applicable>",
       "type":       "<procedure | capability | observation | incident>",
       "summary":    "<2–5 sentences explaining the knowledge clearly and with enough detail to be directly usable>",
-      "tool_calls": ["<OpenClaw tool name>"],
-      "commands":   ["<exact shell command>"],
-      "files":      ["<absolute or relative path>"],
-      "models":     ["<model name>"],
+      "models":     ["<model name — verbatim from session>"],
       "plugins":    ["<plugin name>"],
       "tags":       ["<lowercase-hyphenated-tag>"],
       "confidence": 85,

@@ -1,0 +1,35 @@
+case_id: unit/008-no-entity-substitution
+type: unit
+description: >
+  Catches the most severe class of extraction failure: inventing named
+  entities (model names, commands, file paths) that do not appear in the
+  source session. Discovered when capture.py extracted "llama3-8b" and
+  "llama3-70b" from a session that only ever mentions qwen3, gemma3, and
+  qwen2.5-coder variants.
+
+expected_category: Troubleshooting
+confidence_min: 70
+confidence_max: 100
+
+expected_entities:
+  files:
+    - "AGENTS.md"
+
+forbidden_entities:
+  models:
+    - "llama3-8b"
+    - "llama3-70b"
+    - "llama3"
+    - "llama2"
+    - "mistral"
+    - "phi3"
+    - "gemini"
+    - "gpt-4"
+    - "gpt-3"
+    - "claude-3"
+
+rule: >
+  Never replace a named entity present in the source. You may omit it,
+  quote it, or generalize around it ("the tested model"). You must never
+  substitute it with a different, plausible-sounding entity that does not
+  appear in the source material.

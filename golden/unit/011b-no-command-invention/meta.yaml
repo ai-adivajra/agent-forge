@@ -1,0 +1,45 @@
+case_id: unit/011b-no-command-invention
+type: unit
+purpose: >
+  Verify command faithfulness in isolation from other entity types.
+
+description: >
+  Catches command fabrication: inventing a shell/git command that was
+  never run or written in the session. Confirmed regression — capture.py
+  has independently invented "git apply --check patch.diff" in one run
+  and "git commit -am 'Allow diagnostic surveys in AGENTS.md'" in
+  another. Neither command exists anywhere in the source session, which
+  shows the fix being applied via an `edit` tool call, never a git commit.
+
+expected_category: Troubleshooting
+confidence_min: 60
+confidence_max: 100
+
+forbidden_entities:
+  files: []   # not used here, commands checked via forbidden_terms below
+
+forbidden_terms:
+  - "git commit"
+  - "git apply"
+  - "patch.diff"
+
+checks:
+  forbidden_terms:
+    severity: required
+  category:
+    severity: advisory
+  confidence:
+    severity: advisory
+
+rule: >
+  Commands must be exact substrings that appeared in the session — inside
+  a tool call argument or quoted directly in assistant text. Never invent
+  a plausible command, even one that would be a reasonable next step,
+  unless it actually appears in the source material.
+
+notes: >
+  Uses forbidden_terms (full-text search) rather than a structured
+  commands-field check, because the actual bug observed was the model
+  inventing a git commit action narratively in the summary/reason text,
+  not only in the commands[] array. A full-text forbidden check catches
+  both surfaces of the same fabrication.

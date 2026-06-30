@@ -23,7 +23,7 @@ from pathlib import Path
 
 from openclaw  import OpenClaw
 from parser    import SessionParser
-from extractor import Extractor
+from extractor import Extractor, extract_structured_facts
 from knowledge import KnowledgeCandidate
 from kb        import KnowledgeBase
 from prompts   import SYSTEM_PROMPT
@@ -290,6 +290,18 @@ def cmd_capture(
         KnowledgeCandidate.from_dict(d, source_session=session.name)
         for d in raw_candidates[:max_candidates]
     ]
+
+    # Merge deterministically extracted facts (Deterministic First Principle).
+    # commands/files/tools are always overwritten from the parser.
+    # models are overwritten only when the parser found them structurally;
+    # otherwise the LLM's text-extracted value is kept.
+    facts = extract_structured_facts(conversation)
+    for candidate in candidates:
+        candidate.commands   = facts["commands"]
+        candidate.files      = facts["files"]
+        candidate.tool_calls = facts["tools"]
+        if not facts["ask_llm_for_models"]:
+            candidate.models = facts["models"]
 
     _print_candidates(candidates)
 
