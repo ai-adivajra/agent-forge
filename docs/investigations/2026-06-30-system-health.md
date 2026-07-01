@@ -97,3 +97,15 @@ over time.
   this session — this requires live sampling, not trajectory analysis)
 
 See: `profile_session.py` (instructions sent to Claude Code, not yet run).
+
+## Second occurrence — 2026-07-01
+
+Same evidence gap reproduced on a clean session (machine rebooted, qwen3:14b
+properly loaded, no model transition). GPU/VRAM still absent from response.
+
+Profile data (profile_session.py): 3 LLM calls, 2m10s total, call 1 silently
+aborted (20,903 in → 20 out tokens), call 3 generated the response without
+collecting GPU evidence. System prompt: 38,331 chars (~9,582 tokens).
+
+Status: 2/3 occurrences. One more independent occurrence triggers BEHAVIOR.md
+promotion.
